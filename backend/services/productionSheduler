@@ -1,0 +1,93 @@
+`scheduler.js` must be running continuously to ensure that the scheduled tasks are executed at the specified intervals. When you run `scheduler.js`, it sets up the `node-cron` scheduler and keeps it active, allowing it to trigger the fetchWeatherData function at the defined intervals.
+
+### Running the Scheduler in a Production Environment
+
+In a production environment, you'll typically want to ensure that the `scheduler.js` script is always running, even if the server restarts. Here are some common approaches to achieve this:
+
+#### 1. Using a Process Manager (e.g., PM2)
+
+PM2 is a popular process manager for Node.js applications. It ensures that your application runs continuously, can restart it if it crashes, and can automatically start it on system boot.
+
+1. **Install PM2:**
+
+   ```sh
+   npm install -g pm2
+   ```
+
+2. **Start the Scheduler with PM2:**
+
+   ```sh
+   pm2 start scheduler.js
+   ```
+
+3. **Save the PM2 Process List and Configure Startup Script:**
+
+   ```sh
+   pm2 save
+   pm2 startup
+   ```
+
+   Follow the instructions provided by the `pm2 startup` command to enable PM2 to start on system boot.
+
+4. **Monitor and Manage Processes:**
+
+   You can use PM2 commands to monitor and manage your processes:
+
+   ```sh
+   pm2 list             # List all processes
+   pm2 logs scheduler   # View logs for the scheduler process
+   pm2 stop scheduler   # Stop the scheduler process
+   pm2 restart scheduler # Restart the scheduler process
+   ```
+
+#### 2. Using Systemd (Linux Systems)
+
+If you're running on a Linux system, you can create a systemd service to manage the `scheduler.js` script.
+
+1. **Create a Service File:**
+
+   ```sh
+   sudo nano /etc/systemd/system/weather-scheduler.service
+   ```
+
+2. **Add the Following Configuration:**
+
+   ```ini
+   [Unit]
+   Description=Weather Data Scheduler
+
+   [Service]
+   ExecStart=/usr/bin/node /path/to/your/project/scheduler.js
+   Restart=always
+   User=your-username
+   Environment=PATH=/usr/bin:/usr/local/bin
+   Environment=NODE_ENV=production
+   WorkingDirectory=/path/to/your/project
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   Replace `/path/to/your/project` with the actual path to your project directory and `your-username` with the user that should run the script.
+
+3. **Reload Systemd and Start the Service:**
+
+   ```sh
+   sudo systemctl daemon-reload
+   sudo systemctl start weather-scheduler
+   sudo systemctl enable weather-scheduler
+   ```
+
+4. **Monitor the Service:**
+
+   You can use `systemctl` commands to manage and monitor your service:
+
+   ```sh
+   sudo systemctl status weather-scheduler   # Check the status of the service
+   sudo systemctl stop weather-scheduler     # Stop the service
+   sudo systemctl restart weather-scheduler  # Restart the service
+   ```
+
+### Summary
+
+By using a process manager like PM2 or creating a systemd service, you can ensure that `scheduler.js` runs continuously and automatically restarts if it crashes or the server restarts. This setup is crucial for maintaining the regular execution of your scheduled tasks in a production environment.
