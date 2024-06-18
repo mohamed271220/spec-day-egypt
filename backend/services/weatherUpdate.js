@@ -9,7 +9,8 @@ const fetchWeatherData = async (countryCode) => {
     const apiKey = process.env.OWM_API_KEY;
 
     try {
-        const cities = await City.find({ country: countryCode }); 
+        // Fetch cities from the database for the specified country
+        const cities = await City.find({ country: countryCode });
 
         // Iterate over cities in batches (adjust batchSize as needed)
         const batchSize = 19;
@@ -18,7 +19,7 @@ const fetchWeatherData = async (countryCode) => {
             const cityIds = batchCities.map(city => city.id).join(',');
 
             // Fetch current weather data
-            const weatherUrl = `http://api.openweathermap.org/data/2.5/group?id=${cityIds}&appid=${apiKey}`;
+            const weatherUrl = `http://api.openweathermap.org/data/2.5/group?id=${cityIds}&appid=${apiKey}&units=metric`;
             const response = await axios.get(weatherUrl);
             const weatherData = response.data.list;
 
@@ -44,38 +45,35 @@ const fetchWeatherData = async (countryCode) => {
                 }
             }
 
-            // Fetch forecast data
-            const forecastUrl = `http://api.openweathermap.org/data/2.5/forecast?id=${cityIds}&appid=${apiKey}`;
-            const forecastResponse = await axios.get(forecastUrl);
-            const forecastData = forecastResponse.data.list;
+            // Fetch forecast data for each city individually
+            for (const city of batchCities) {
+                const forecastUrl = `http://api.openweathermap.org/data/2.5/forecast?id=${city.id}&appid=${apiKey}&units=metric`;
+                const forecastResponse = await axios.get(forecastUrl);
+                const forecastData = forecastResponse.data.list;
 
-            // Store or update forecast data in MongoDB for each city
-            for (const data of forecastData) {
-                const city = batchCities.find(c => c.id === data.id);
-                if (city) {
-                    await Weather.findOneAndUpdate(
-                        { city: city._id },
-                        {
-                            $push: {
-                                forecast: {
-                                    temp: data.main.temp,
-                                    humidity: data.main.humidity,
-                                    windSpeed: data.wind.speed,
-                                    description: data.weather[0].description,
-                                    icon: data.weather[0].icon,
-                                    timestamp: new Date(data.dt * 1000),
-                                }
-                            }
+                // Store or update forecast data in MongoDB for each city
+                await Weather.findOneAndUpdate(
+                    { city: city._id },
+                    {
+                        $set: {
+                            hourly: forecastData.map(data => ({
+                                temp: data.main.temp,
+                                humidity: data.main.humidity,
+                                windSpeed: data.wind.speed,
+                                description: data.weather[0].description,
+                                icon: data.weather[0].icon,
+                                timestamp: new Date(data.dt * 1000),
+                            }))
                         },
-                        { upsert: true }
-                    );
-                }
+                    },
+                    { upsert: true }
+                );
             }
         }
 
-        console.log(`Weather data fetch completed successfully for Egypt`);
+        console.log(`Weather data fetch completed successfully for ${countryCode}`);
     } catch (error) {
-        console.error(`Error fetching weather data for Egypt:`, error);
+        console.error(`Error fetching weather data for ${countryCode}:`, error);
     }
 };
 

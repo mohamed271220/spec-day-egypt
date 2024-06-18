@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --timeout 10000 'test/**/*.test.js'",
+    "start": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +20,10 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.1",
     "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "mocha": "^9.1.3"
   }
 }

@@ -53,3 +53,17 @@ exports.getAllCitiesWithWeather = async (req, res, next) => {
         res.status(500).json({ message: 'Error fetching cities and weather data', error });
     }
 };
+
+exports.getWeatherByLocation = async (req, res) => {
+    const { lat, lon } = req.query;
+    try {
+        const city = await City.findOne({ 'coord.lat': lat, 'coord.lon': lon });
+        if (!city) {
+            return res.status(404).json({ message: 'City not found for the specified location' });
+        }
+        const weatherData = await Weather.findOne({ city: city._id }).populate('city');
+        res.json(weatherData);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch weather data', error });
+    }
+};

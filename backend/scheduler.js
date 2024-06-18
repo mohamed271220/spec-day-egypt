@@ -16,10 +16,10 @@ mongoose.connect(process.env.MONGO_DB, { useNewUrlParser: true, useUnifiedTopolo
     });
 
 function startScheduler() {
-    const task = cron.schedule('0 * * * *', async () => {
+    const task = cron.schedule('0 0 * * *', async () => {
         console.log('Running weather data fetch task...');
         try {
-            await fetchWeatherData();
+            await fetchWeatherData('EG');
             console.log('Weather data fetched successfully');
         } catch (error) {
             console.error('Error fetching weather data:', error);
